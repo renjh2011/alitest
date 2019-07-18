@@ -1,0 +1,47 @@
+package com.aliware.tianchi;
+
+import org.apache.dubbo.common.Constants;
+import org.apache.dubbo.common.extension.ExtensionLoader;
+import org.apache.dubbo.common.store.DataStore;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+public class ServerStatus {
+    private static AtomicInteger MAX_THREAD_POOL = new AtomicInteger(0);
+    /**
+     * 服务端请求量
+     */
+    private static AtomicInteger reqCount=new AtomicInteger(0);
+    /**
+     * 服务端返回量
+     */
+    private static AtomicInteger resCount=new AtomicInteger(0);
+    /**
+     * 服务端处理时间
+     */
+    private static AtomicLong reqRtt=new AtomicLong(0);
+    private static ServerStatus status = new ServerStatus();
+    private static String ip = "";
+
+    private ServerStatus(){
+        DataStore dataStore = ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension();
+        Map<String, Object> map = dataStore.get(Constants.EXECUTOR_SERVICE_COMPONENT_KEY);
+        Set<Map.Entry<String, Object>> set = map.entrySet();
+        for(Map.Entry<String, Object> entry1 : set){
+            if(entry1.getValue() instanceof ThreadPoolExecutor){
+                ThreadPoolExecutor executorService = (ThreadPoolExecutor) entry1.getValue();
+                MAX_THREAD_POOL.set(executorService.getMaximumPoolSize());
+                break;
+            }
+        }
+    }
+
+    public static Integer getMaxThreadPool() {
+        return MAX_THREAD_POOL.get();
+    }
+
+}
